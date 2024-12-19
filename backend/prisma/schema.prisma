@@ -18,3 +18,74 @@ model User {
   clerkId String @unique
   email   String
 }
+
+model Restaurant {
+  id String @id @default(uuid())
+
+  tables Table[]
+  Menu   Menu[]
+}
+
+model Menu {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  items Item[]
+}
+
+model Table {
+  id String @id @default(uuid())
+
+  seats      Int      @default(1)
+  seated     Int
+  total      Float
+  isReserved DateTime
+
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  orders Order[]
+}
+
+model Order {
+  id String @id @default(uuid())
+
+  tableId String
+  table   Table       @relation(fields: [tableId], references: [id])
+  items   OrderItem[]
+
+  status String @default("SUBMITTED")
+  total  Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
+
+model OrderItem {
+  id       String @id @default(uuid())
+  quantity Int
+
+  itemId String
+  item   Item   @relation(fields: [itemId], references: [id])
+
+  order Order[]
+
+  @@unique([id, itemId])
+}
+
+model Item {
+  id String @id @default(uuid())
+
+  name        String
+  description String?
+  price       Float
+  category    String?
+  isAvailable Boolean @default(true)
+  imageUrl    String?
+
+  menuId String
+  menu   Menu   @relation(fields: [menuId], references: [id])
+
+  order_items OrderItem[]
+}
