@@ -29,8 +29,7 @@ export class OrderController {
 
   @Patch(':orderId')
   async updateOrderStatus(@Param('orderId') orderId: string) {
-    // return 'Handles updating the progress';
-    return this.orderService.updateOrderStaturs(orderI);
+    return this.orderService.updateOrderStaturs(orderId);
   }
 
   @Delete(':orderId')

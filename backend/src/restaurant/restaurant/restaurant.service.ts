@@ -10,7 +10,6 @@ export class RestaurantService {
   constructor(
     private prisma: PrismaService,
     private orderService: OrderService,
-    private tableService: TableService,
     private menuService: MenuService,
   ) {}
 
