@@ -20,10 +20,59 @@ model User {
 }
 
 model Restaurant {
-  id String @id @default(uuid())
+  id          String    @id @default(uuid())
+  name        String 
+  description String // where operating hours can be added
+  maxTables      Int
 
-  tables Table[]
-  Menu   Menu[]
+  // Basic business information
+  phone       String?
+  email       String?
+  website     String?
+  imageUrl    String?
+
+  // Business details
+  cuisine     String?      // e.g., "Italian", "Japanese", "American"
+  priceRange  String?      // e.g., "$", "$$", "$$$", "$$$$"
+  capacity    Int?         // Total restaurant capacity
+  isActive    Boolean     @default(true)
+  
+  // Ratings and reviews
+  rating      Float?      // Average rating
+  reviewCount Int        @default(0)
+  
+  // Timestamps
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Existing relations
+  location    Address[]
+  tables      Table[]
+  Menu        Menu[]
+}
+
+model Address {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  street           String
+  city             String
+  state            String
+  zipCode          String
+  country          String
+  placeId          String? @unique // Google Maps Place ID
+  formattedAddress String // Full formatted address from Google
+  latitude         Float?
+  longitude        Float?
+  locationType     String? // ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER, APPROXIMATE
+  plusCode         String? // Open Location Code
+  businessStatus   String? // OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY
+  utcOffset        Int? // UTC offset in minutes
+  timezone         String? // Timezone ID
+  isVerified       Boolean @default(false)
+
+  toString String
 }
 
 model Menu {
