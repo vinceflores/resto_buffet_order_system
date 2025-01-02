@@ -17,11 +17,15 @@ model User {
   id      String @id @default(uuid())
   clerkId String @unique
   email   String
+  restaurants Restaurant[]
 }
 
 model Restaurant {
   id          String    @id @default(uuid())
-  name        String 
+  userId    String  @default("")
+  users       User @relation(fields: [userId], references: [id])
+
+  name        String  
   description String // where operating hours can be added
   maxTables      Int
 
@@ -59,10 +63,10 @@ model Address {
   street           String
   city             String
   state            String
-  zipCode          String
   country          String
+  zipCode          String?
   placeId          String? @unique // Google Maps Place ID
-  formattedAddress String // Full formatted address from Google
+  formattedAddress String? // Full formatted address from Google
   latitude         Float?
   longitude        Float?
   locationType     String? // ROOFTOP, RANGE_INTERPOLATED, GEOMETRIC_CENTER, APPROXIMATE
@@ -72,7 +76,7 @@ model Address {
   timezone         String? // Timezone ID
   isVerified       Boolean @default(false)
 
-  toString String
+  toString String?
 }
 
 model Menu {
@@ -86,15 +90,25 @@ model Menu {
 model Table {
   id String @id @default(uuid())
 
+  name      String    @default("")
   seats      Int      @default(1)
   seated     Int
   total      Float
-  isReserved DateTime
 
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 
+  isReserved Boolean
+  reservations Reservation[]
   orders Order[]
+}
+
+model Reservation {
+  id           String @id @default(uuid())
+  restuarantId String
+  status       String
+  tables       Table[]
+  date         DateTime
 }
 
 model Order {

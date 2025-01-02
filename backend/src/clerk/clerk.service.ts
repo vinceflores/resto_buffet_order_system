@@ -14,8 +14,6 @@ export class ClerkService {
   async handleWebhook(evt: any, res: Response) {
     const { id } = evt.data;
     const eventType = evt.type;
-    // console.log(`Webhook with an ID of ${id} and type of ${eventType}`);
-    // console.log('Webhook body:', evt.data);
     try {
       if (evt.type == 'user.created' || evt.type == 'user.updated') {
         await this.handleUserCreatedOrUpdated(evt);
@@ -30,7 +28,6 @@ export class ClerkService {
   }
 
   private async handleUserCreatedOrUpdated(evt: any) {
-    // return await this.prisma.
     const data = evt.data;
     await this.prisma.user.upsert({
       where: {

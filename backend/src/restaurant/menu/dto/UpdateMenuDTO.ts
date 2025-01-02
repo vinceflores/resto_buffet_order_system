@@ -1,3 +1,7 @@
+import { IsDefined } from 'class-validator';
 import { CreateMenuDTO } from './CreateMenuDTO';
+import { Menu } from '@prisma/client';
 
-export class UpdateMenuDTO implements Partial<CreateMenuDTO> {}
+export class UpdateMenuDTO {
+  menu: Menu;
+}

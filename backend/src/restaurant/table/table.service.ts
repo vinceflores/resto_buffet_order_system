@@ -7,8 +7,26 @@ import { UpdateTableDTO } from './dto/UpadteTableDTO';
 export class TableService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(table: CreateTableDTO) {}
-  async findAll(tableId: string) {}
-  async update(tableId: string, table: UpdateTableDTO) {}
-  async delete(tableId: string) {}
+  async create(table: CreateTableDTO) {
+    await this.prisma.table.create({
+      data: { isReserved: false, ...table },
+    });
+  }
+
+  async findAll(tableId: string) {
+    return await this.prisma.table.findMany({
+      where: { restaurantId: tableId },
+    });
+  }
+
+  async update(tableId: string, table: UpdateTableDTO) {
+    return await this.prisma.table.update({
+      where: { id: tableId },
+      data: table,
+    });
+  }
+
+  async delete(tableId: string) {
+    await this.prisma.table.delete({ where: { id: tableId } });
+  }
 }

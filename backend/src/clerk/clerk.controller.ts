@@ -61,7 +61,6 @@ export class ClerkController {
         'svix-signature': svix_signature as string,
       });
     } catch (err) {
-      console.log('Error verifying webhook:', err.message);
       if (err) {
         return new Response(err.message, {
           status: 400,

@@ -14,14 +14,34 @@ export class RestaurantService {
   ) {}
 
   async create(data: CreateRestaurantDto) {
-    const { location, ...restData } = data;
+    const { location, clerkId, ...restData } = data;
+    const user = await this.prisma.user.findFirst({
+      where: { clerkId },
+      select: { id: true },
+    });
+
+    if (!user) return null;
+
     return await this.prisma.restaurant.create({
       data: {
         ...restData,
+        userId: user.id,
         location: {
-          create: location,
+          createMany: {
+            data: location,
+          },
         },
       },
+    });
+  }
+
+  async findAll(id: string, { skip, take }: { skip: number; take: number }) {
+    return await this.prisma.restaurant.findMany({
+      where: {
+        userId: id,
+      },
+      skip,
+      take,
     });
   }
 

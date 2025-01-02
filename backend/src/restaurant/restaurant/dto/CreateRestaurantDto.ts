@@ -2,9 +2,10 @@ import { Address, Table } from '@prisma/client';
 
 export class CreateRestaurantDto {
   // Add custom DTO properties here
+  clerkId?: string;
   name: string;
-  description: string;
   maxTables: number;
+  description: string;
   phone?: string;
   email?: string;
   website?: string;
