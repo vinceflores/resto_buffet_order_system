@@ -10,11 +10,6 @@ export class ReadRestaurantDto {
   website?: string;
   imageUrl?: string;
   cuisine?: string;
-  priceRange?: string;
-  capacity?: number;
-  isActive?: boolean;
-  rating?: number;
-  reviewCount?: number;
   location?: Address[];
   tables?: Table[];
   menu?: Table[];

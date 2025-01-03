@@ -1,10 +1,4 @@
 "use client";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -16,10 +10,16 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { Label } from "@/components/ui/label";
 import LocationSelector from "@/components/ui/location-input";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 
 export const CreateRestauSchema = z.object({
   id: z.string().optional(),
@@ -30,13 +30,27 @@ export const CreateRestauSchema = z.object({
   website: z.string().optional(),
   phone: z.string(),
   email: z.string().optional(),
-  address: z.string().min(1).optional(),
-  address_2: z.string().optional(),
-  country_state: z.tuple([z.string(), z.string().optional()]),
+  location: z.array(
+    z.object({
+      id: z.string().optional(),
+      street: z.string(),
+      city: z.string(),
+      state: z.string(),
+      country: z.string(),
+      zipCode: z.string(),
+    })
+  ),
 });
 
+const initialAddress = {
+  street: "",
+  city: "",
+  state: "",
+  country: "",
+  zipCode: "",
+};
+
 const defaultCreateRestauValues: z.infer<typeof CreateRestauSchema> = {
-  id: "",
   name: "",
   description: "",
   maxTables: 1,
@@ -44,62 +58,35 @@ const defaultCreateRestauValues: z.infer<typeof CreateRestauSchema> = {
   website: "",
   phone: "",
   email: "",
-  address: "",
-  address_2: "",
-  country_state: ["", ""],
+  location: [initialAddress],
 };
 
-export type CreateRestaurantFormSubmitParams = {
-  name: string;
-  description: string;
-  maxTables: number;
-  phone?: string;
-  email?: string;
-  website?: string;
-  imageUrl?: string;
-  cuisine?: string;
-  location: {
-    city: string;
-    street: string;
-    country: string;
-    state: string;
-  }[];
-};
+export type CreateRestaurantFormSubmitParams = z.infer<
+  typeof CreateRestauSchema
+>;
 
 export type CreateRestaurantFormProps = {
-  initialData?: z.infer<typeof CreateRestauSchema>;
+  initialData?: CreateRestaurantFormSubmitParams;
   onSubmit: (values: CreateRestaurantFormSubmitParams) => Promise<void>;
 };
 
 export default function CreateRestaurantForm(props: CreateRestaurantFormProps) {
-  const [countryName, setCountryName] = useState<string>("");
-  const [stateName, setStateName] = useState<string>("");
-  const [city, setCity] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
+  const [state, setState] = useState<string>("");
 
-  const form = useForm<z.infer<typeof CreateRestauSchema>>({
+  const form = useForm<CreateRestaurantFormSubmitParams>({
     resolver: zodResolver(CreateRestauSchema),
     defaultValues: props.initialData || defaultCreateRestauValues,
   });
 
-  function onSubmit(values: z.infer<typeof CreateRestauSchema>) {
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "location",
+  });
+
+  function onSubmit(values: CreateRestaurantFormSubmitParams) {
     try {
-      const location = {
-        street: values.address || "",
-        city: city || "",
-        state: values.country_state[1] || "",
-        country: values.country_state[0] || "",
-      };
-      // console.log({ values, location });
-      props.onSubmit({
-        description: values.description,
-        name: values.name,
-        maxTables: values.maxTables,
-        phone: values.phone,
-        email: values.email,
-        website: values.website,
-        cuisine: values.cuisine,
-        location: [location],
-      });
+      props.onSubmit(values);
       toast(
         <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
           <code className="text-white">{JSON.stringify(values, null, 2)}</code>
@@ -269,83 +256,74 @@ export default function CreateRestaurantForm(props: CreateRestaurantFormProps) {
           </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="country_state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Select Country</FormLabel>
-              <FormControl>
-                <LocationSelector
-                  onCountryChange={(country) => {
-                    setCountryName(country?.name || "");
-                    form.setValue(field.name, [
-                      country?.name || "",
-                      stateName || "",
-                    ]);
-                  }}
-                  onStateChange={(state) => {
-                    setStateName(state?.name || "");
-                    form.setValue(field.name, [
-                      form.getValues(field.name)[0] || "",
-                      state?.name || "",
-                    ]);
-                  }}
-                />
-              </FormControl>
-              <FormDescription>
-                If your country has states, it will be appear after selecting
-                country
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {/* Addresses */}
         <div>
-          <h2>City</h2>
-          <Input
-            placeholder="city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
+          <div className="flex mb-2 items-center justify-between">
+            <h2 className="font-bold text-xl">Addresses</h2>
+            <Button onClick={() => append(initialAddress)} type="button">
+              Add Address
+            </Button>
+          </div>
+          {fields.map((field, index: number) => (
+            <div key={field.id} className="space-y-2 ">
+              <h2 className="font-medium mb-1">Address {index + 1}</h2>
+              <p>Select a Country</p>
+
+              <Input
+                {...form.register(`location.${index}.country` as const)}
+                className="hidden"
+              />
+              <Input
+                {...form.register(`location.${index}.state` as const)}
+                className="hidden"
+              />
+
+              <LocationSelector
+                onCountryChange={(country) => {
+                  form.setValue(
+                    `location.${index}.country` as const,
+                    country?.name || ""
+                  );
+                }}
+                onStateChange={(state) => {
+                  form.setValue(
+                    `location.${index}.state` as const,
+                    state?.name || ""
+                  );
+                }}
+              />
+
+              <Label>Street</Label>
+              <Input
+                {...form.register(`location.${index}.street` as const)}
+                placeholder="Street Address"
+              />
+
+              <Label>City</Label>
+              <Input
+                {...form.register(`location.${index}.city` as const)}
+                placeholder="City"
+              />
+
+              <Label>ZIP Code</Label>
+              <Input
+                {...form.register(`location.${index}.zipCode` as const)}
+                placeholder="ZIP Code"
+              />
+
+              <div className="flex justify-end items-center">
+                <Button
+                  variant="outline"
+                  onClick={() => remove(index)}
+                  type="button"
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address 1</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="number, street, apt/suite"
-                  type="text"
-                  {...field}
-                />
-              </FormControl>
 
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="address_2"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address 2</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="number, street, apt/suite"
-                  type="text"
-                  {...field}
-                />
-              </FormControl>
-
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <Button type="submit">Submit</Button>
       </form>
     </Form>

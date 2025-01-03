@@ -36,12 +36,31 @@ export class RestaurantService {
   }
 
   async findAll(id: string, { skip, take }: { skip: number; take: number }) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        clerkId: id,
+      },
+      select: { id: true },
+    });
+
     return await this.prisma.restaurant.findMany({
       where: {
-        userId: id,
+        userId: user.id,
       },
-      skip,
-      take,
+      skip: Number(skip),
+      take: Number(take),
+      include: {
+        location: {
+          select: {
+            country: true,
+            id: true,
+            state: true,
+            street: true,
+            city: true,
+            zipCode: true,
+          },
+        },
+      },
     });
   }
 

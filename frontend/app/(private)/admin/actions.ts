@@ -1,12 +1,11 @@
 "use server";
 import { api } from "@/lib/api";
-// import { auth } from "@clerk/nextjs/server";
 import { auth } from "@/utils/auth";
-import { z } from "zod";
-import { CreateRestauSchema } from "@/components/shared/restaurant/restaurant-form";
-
+import { CreateRestaurantFormSubmitParams } from "@/components/shared/restaurant/restaurant-form";
+import { env } from "@/lib/env";
 const base_endpoint = "/restaurant";
-export type CreateRestaurantParams = z.infer<CreateRestauSchema>;
+
+export type CreateRestaurantParams = CreateRestaurantFormSubmitParams;
 
 export async function create(data: CreateRestaurantParams) {
   const { userId } = await auth();
@@ -17,7 +16,19 @@ export async function create(data: CreateRestaurantParams) {
 }
 
 export async function findAll(skip = 0, take = 10) {
-  return await api.get(`${base_endpoint}?skip=${skip}&take=${take}`);
+  const { userId } = await auth();
+  const data = await api.get(
+    `${base_endpoint}/${userId}?skip=${skip}&take=${take}`
+  );
+  return data.data;
+  // const data = await fetch(
+  //   env.baseURL + base_endpoint + `/${userId}?skip=${skip}&take=${take}`,
+  //   {
+  //     method: "GET",
+  //     headers: { "Content-Type": "application/json" },
+  //   }
+  // );
+  // return await data.json();
 }
 
 export async function findOne(resId: string) {

@@ -12,21 +12,50 @@ import {
 import { PlusCircle } from "lucide-react";
 import { useState } from "react";
 import CreateRestaurantForm, {
-  // CreateRestauSchema,
   CreateRestaurantFormSubmitParams,
 } from "@/components/shared/restaurant/restaurant-form";
-
-import { seededRandomNumberGenerator } from "@/utils/random";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { z } from "zod";
-import { create } from "./actions";
+import { create, findAll, update } from "./actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+// import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const router = useRouter();
-  const arr = [1, 2, 3, 4];
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedRestaurant, setSelectedR] =
+    useState<CreateRestaurantFormSubmitParams | null>(null);
+  const [data, setData] = useState<CreateRestaurantFormSubmitParams[]>([]);
+
+  useEffect(() => {
+    const get = async () => {
+      try {
+        const d = await findAll();
+        console.log({ datas: d });
+        setData((prev) => d || prev);
+      } catch (error) {}
+    };
+    get();
+  }, []);
+
   const submitRestau = async (values: CreateRestaurantFormSubmitParams) => {
+    // console.log({ values });
     await create(values);
+  };
+
+  const updateOne = async (values: CreateRestaurantFormSubmitParams) => {
+    await update(values?.id as string, values);
+  };
+
+  const onEdit = (data: CreateRestaurantFormSubmitParams) => {
+    setSelectedR(data);
+    setOpen(!open);
   };
 
   return (
@@ -51,21 +80,37 @@ export default function DashboardPage() {
         </Sheet>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {arr.map((a) => {
-          // const rand = Math.floor(Math.random() * 1000); // Generate a random number
-          const rand = seededRandomNumberGenerator(1000)(1, 20);
-          // const rand = 1
-          const url = `https://picsum.photos/seed/abstract_${rand}/200/100`;
-          return (
-            <RestaurantCard
-              onClick={() => router.push(`/admin/${a}`)}
-              coverImage={url}
-              key={a}
-              name="resto 1"
-            />
-          );
-        })}
+        {data &&
+          data.length > 0 &&
+          data.map((a: CreateRestaurantFormSubmitParams, index: number) => {
+            const url = `https://picsum.photos/seed/abstract_${index}/200/100`;
+            return (
+              <RestaurantCard
+                onEdit={onEdit}
+                onClick={() => router.push(`/admin/${a.id}`)}
+                resId={a.id as string}
+                key={a.id}
+                coverImage={url}
+                name={a.name as string}
+                description={a.description as string}
+                data={a}
+              />
+            );
+          })}
       </div>
+      <Dialog open={open} onOpenChange={() => setOpen(!open)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="capitalize">
+              {selectedRestaurant?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <CreateRestaurantForm
+            onSubmit={updateOne}
+            initialData={selectedRestaurant || undefined}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
