@@ -45,7 +45,6 @@ export default function DashboardPage() {
   }, []);
 
   const submitRestau = async (values: CreateRestaurantFormSubmitParams) => {
-    // console.log({ values });
     await create(values);
   };
 

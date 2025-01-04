@@ -61,6 +61,10 @@ model Address {
 
 model Menu {
   id           String     @id @default(uuid())
+  name String
+  description String
+  imageUrl String
+
   restaurantId String
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
 

@@ -21,8 +21,17 @@ export class MenuController {
   }
 
   @Get(':resId')
-  async findAll(@Param('resId') resId: string) {
-    return this.menuService.findAll(resId);
+  async findAll(
+    @Param('resId') resId: string,
+    @Param('skip') skip: number = 0,
+    @Param('take') take: number = 10,
+  ) {
+    return this.menuService.findAll(resId, skip, take);
+  }
+
+  @Get(':menuId')
+  async findOne(@Param('menuId') menuId: string) {
+    return this.menuService.findOne(menuId);
   }
 
   @Patch(':menuId')

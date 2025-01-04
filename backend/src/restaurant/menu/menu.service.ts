@@ -10,7 +10,7 @@ export class MenuService {
   async create(createMenuDto: CreateMenuDTO) {
     return await this.prisma.menu.create({
       data: {
-        restaurantId: createMenuDto.restaurantId,
+        ...createMenuDto,
         items: {
           createMany: {
             data: createMenuDto.items,
@@ -20,11 +20,13 @@ export class MenuService {
     });
   }
 
-  async findAll(resId: string) {
+  async findAll(resId: string, skip: number, take: number) {
     return await this.prisma.menu.findMany({
       where: {
         restaurantId: resId,
       },
+      skip,
+      take,
     });
   }
 
