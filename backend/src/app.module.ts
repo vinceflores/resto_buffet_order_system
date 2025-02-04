@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as dotenv from 'dotenv';
 import { AppController } from './app.controller';
@@ -9,7 +9,7 @@ import { MenuModule } from './restaurant/menu/menu.module';
 import { OrderModule } from './restaurant/order/order.module';
 import { RestaurantModule } from './restaurant/restaurant/restaurant.module';
 import { TableModule } from './restaurant/table/table.module';
-import { JwtModule } from './jwt/jwt.module';
+import { clerkMiddleware } from '@clerk/express';
 
 dotenv.config({ path: process.cwd() });
 @Module({
@@ -23,9 +23,12 @@ dotenv.config({ path: process.cwd() });
     TableModule,
     MenuModule,
     OrderModule,
-    JwtModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(clerkMiddleware()).forRoutes('table');
+  }
+}
